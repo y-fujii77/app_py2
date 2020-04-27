@@ -28,14 +28,11 @@ import sys
 import glob
 '''
 # API
-from flask import Flask
+from flask import Flask, jsonify
 app = Flask(__name__)
 
 # @app.route('/')
-@app.route('/hello')
-def hello_world():
-    return jsonify({'message': "Hello, world"})
-    
+
 def main():
 
 	# print('numpy:', np.__version__)
@@ -239,6 +236,9 @@ def main():
 
 	# pyinstaller hello.py --onefile
 	return str(res)
-	
+
+@app.route('/hello')
+def hello_world():
+    return jsonify({'message': "Hello, world"})
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port="8000")
