@@ -243,7 +243,7 @@ def hello_world():
 
 @app.route('/body')
 def body():
-    return jsonify({'b_tmp': 37.5, 'status': true)
+	return jsonify({'b_tmp': "37.5", 'status': "true")
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port="8000")
