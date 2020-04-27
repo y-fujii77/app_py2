@@ -3,3 +3,4 @@ gunicorn
 imutils
 opencv-python
 matplotlib
+scipy
