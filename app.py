@@ -24,6 +24,7 @@ import imutils
 #import sys
 import glob
 import base64
+import boto3
 
 # API
 from flask import Flask, jsonify, request, Markup
@@ -33,21 +34,33 @@ app = Flask(__name__)
 #app = Flask('flask-tesseract-api')
 #CORS(app)
 
+bucket_name = 'new-employee-training'
+bucket_path = '0.jpeg'#'https://new-employee-training.s3-ap-northeast-1.amazonaws.com/0.jpeg'
+
+'''
 @app.route('/')
 def index():
-    html = '''
+    html = ''
     <form action="/main">
         <p><label>test: </label>
         <input type="text" name="test" value="0.jpeg">
         <button type="submit" formmethod="get">GET</button>
         <button type="submit" formmethod="post">POST</button></p>
     </form>
-    '''
+    ''
     
     return Markup(html)
+'''
 
-@app.route('/main', methods=['GET', 'POST'])
+def file_exists(filename):
+	if filename != '':
+		return True
+	else:
+		return False
+
+@app.route('/main')#, methods=['GET', 'POST'])
 def main():
+	'''
 	try:
 		if request.method == 'POST':
 			imagepath = request.form['test']
@@ -56,7 +69,9 @@ def main():
 			print(request)
 	except Exception as e:
 		imagepath = '0.jpeg'
-		
+	'''
+	# res 初期化
+	res = 0.0
 
 	# 時間計測開始
 	# start = time.time()
@@ -65,10 +80,17 @@ def main():
 	# print("第1引数：" + args[1])
 
 	# ディレクトリを指定
-	#imagepath = '0.jpeg'
-	# 'number_recognition/0.jpeg'
-	# imagepath = 'number_recognition/DSC_0871.JPG'
-	image = cv2.imread(imagepath)
+	imagepath = ''
+	# s3ファイルダウンロード
+	s3 = boto3.resource('s3') #S3オブジェクトを取得
+	bucket = s3.Bucket(bucket_name)
+	bucket.download_file(bucket_path, imagepath)
+	
+	# 画像読み込み
+	if file_exists(imagepath):
+		image = cv2.imread(imagepath)
+	else:
+		res = 0.0
 
 	# 画像リサイズ
 	# height, width = image.shape[:2]
@@ -221,7 +243,7 @@ def main():
 @app.route('/hello')
 def hello_world():
     return jsonify({'message': "Hello, world"})
-
+'''
 @app.route('/image/')
 def post():
     """
@@ -259,6 +281,6 @@ def example():
     # decode the bytes to image directly
     img = cv2.imdecode(_bytes, flags=cv2.IMREAD_COLOR)
     return jsonify(img.shape)
-
+'''
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port="8000")
