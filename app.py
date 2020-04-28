@@ -218,14 +218,13 @@ def main():
 def hello_world():
     return jsonify({'message': "Hello, world"})
 
-@app.route('/image/', methods=["POST"])
+@app.route('/image/')
 def post():
     """
     画像をグレースケールに変換する
-    """
-
+    
+	
     response = []
-
     for json in request.json:
 
         # Imageをデコード
@@ -246,8 +245,8 @@ def post():
 
         # レスポンスのjsonに箱詰め
         response.append({'id':json['id'], 'result' : img_base64})
-
-    return jsonify(response)
+	"""
+    return jsonify(request)
     
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port="8000")
