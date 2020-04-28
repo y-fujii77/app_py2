@@ -35,7 +35,7 @@ app = Flask(__name__)
 #CORS(app)
 
 bucket_name = 'new-employee-training'
-bucket_path = 'https://new-employee-training.s3-ap-northeast-1.amazonaws.com/0.jpeg'
+bucket_path = '0.jpeg'
 
 '''
 @app.route('/')
