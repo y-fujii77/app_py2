@@ -252,15 +252,6 @@ def post():
 	"""
     return jsonify(request)
 
-@app.route("/upload", methods=["POST"])
-def example():
-    # read request body as byte array
-    _bytes = np.frombuffer(request.data, np.uint8)
-    # decode the bytes to image directly
-    img = cv2.imdecode(_bytes, flags=cv2.IMREAD_COLOR)
-
-    return jsonify(img.shape)
-    
 @app.route("/example", methods=["POST"])
 def example():
     # read request body as byte array
@@ -268,6 +259,6 @@ def example():
     # decode the bytes to image directly
     img = cv2.imdecode(_bytes, flags=cv2.IMREAD_COLOR)
     return jsonify(img.shape)
-  
+
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port="8000")
