@@ -15,8 +15,6 @@ from matplotlib.ticker import MultipleLocator, FixedLocator
 from matplotlib.patches import Rectangle, Polygon
 from matplotlib.collections import PatchCollection
 
-# from google.colab.patches import cv2_imshow
-
 # import the necessary packages
 from imutils.perspective import four_point_transform
 from imutils import contours
@@ -27,23 +25,33 @@ import imutils
 import glob
 
 # API
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request, Markup
+
 app = Flask(__name__)
 
-# @app.route('/')
-@app.route('/main')
+@app.route('/')
+def index():
+    html = '''
+    <form action="/main">
+        <p><label>test: </label>
+        <input type="text" name="test" value="0.jpeg">
+        <button type="submit" formmethod="get">GET</button>
+        <button type="submit" formmethod="post">POST</button></p>
+    </form>
+    '''
+    return Markup(html)
 
+# @app.route('/')
+@app.route('/main', methods=['GET', 'POST'])
 def main():
 
-	# print('numpy:', np.__version__)
-	# print('matplotlib:', mplv)
-	# print('OpenCV:', cv2.__version__)
-
-	# from google.colab import drive
-	# drive.mount('/content/drive')
-
-	# %cd drive/My Drive
-	# !ls number_recognition
+	try:
+		if request.method == 'POST':
+			imagepath = request.form['test']
+		else:
+			imagepath = request.args.get('test', '')
+	except Exception as e:
+		imagepath = '0.jpeg'
 
 	# 時間計測開始
 	# start = time.time()
@@ -52,21 +60,15 @@ def main():
 	# print("第1引数：" + args[1])
 
 	# ディレクトリを指定
-	imagepath = '0.jpeg'
+	#imagepath = '0.jpeg'
 	# 'number_recognition/0.jpeg'
-	# respath = 'res2/'
 	# imagepath = 'number_recognition/DSC_0871.JPG'
-	# respath = 'res/'
-	#imagepath = glob.glob(path)
 	image = cv2.imread(imagepath)
 
 	# 画像リサイズ
 	# height, width = image.shape[:2]
 	# size = (width//4, height//4)
 	# image = cv2.resize(image, size)
-
-	# 確認画像表示
-	# cv2_imshow(image)
 
 	# define the dictionary of digit segments so we can identify
 	# each digit on the thermostat
@@ -85,7 +87,6 @@ def main():
 
 	# pre-process the image by resizing it, converting it to
 	# graycale, blurring it, and computing an edge map
-	############################################ 画像の解像度、ノイズによってここを修正 ############################################
 	image = imutils.resize(image, height=500)
 	gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 	ret,bina = cv2.threshold(gray,170,255,cv2.THRESH_BINARY)
@@ -103,10 +104,6 @@ def main():
 	# median = cv2.medianBlur(th2,5)
 	# blurred = cv2.GaussianBlur(th2, (5, 5), 0)
 	# edged = cv2.Canny(bina, 0, 50,255)
-
-	# 確認画像表示
-	# cv2_imshow(bina)
-	# cv2_imshow(edged)
 
 	# LCD領域：ディスプレイ領域
 	# find contours in the edge map, then sort them by their
@@ -131,19 +128,11 @@ def main():
 	warped = four_point_transform(gray, displayCnt.reshape(4, 2))
 	output = four_point_transform(image, displayCnt.reshape(4, 2))
 
-	# 確認画像表示
-	# cv2_imshow(output)
-	# cv2.imwrite(respath + 'res_four_point.jpg',output)
-
 	# threshold the warped image, then apply a series of morphological
 	# operations to cleanup the thresholded image
 	thresh = cv2.threshold(warped, 0, 255,cv2.THRESH_BINARY_INV | cv2.THRESH_OTSU)[1]
 	kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (1, 5))
 	thresh = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel)
-
-	# 確認画像表示
-	# cv2_imshow(thresh)
-	# cv2.imwrite("res2/res_binary.jpg",thresh)
 
 	# find contours in the thresholded image, then initialize the
 	# digit contours lists
@@ -159,11 +148,9 @@ def main():
 		# if the contour is sufficiently large, it must be a digit
 		# '''
 		
-		if w >= 55 and (h >= 95 and h <= 120):												# ここじゃあああああああああああ
+		if w >= 55 and (h >= 95 and h <= 120):
 			digitCnts.append(c)
 			img = cv2.rectangle(output,(x,y),(x+w,y+h),(255,255,0),2)
-			# cv2_imshow(img)
-			# cv2.imwrite("res2/res_"+str(i)+".jpg",img)
 			i = i + 1
 		# '''
 	# sort the contours from left-to-right, then initialize the
@@ -207,34 +194,22 @@ def main():
 				on[i]= 1
 		# lookup the digit and draw it on the image
 		# 要素にあるか確認
-		# print(on)
 		if tuple(on) not in DIGITS_LOOKUP:
-			# print("Foge")
 			digit = DIGITS_LOOKUP[(1, 1, 1, 0, 1, 1, 1)]
 		else:
-			# print("Tanaka")
 			digit = DIGITS_LOOKUP[tuple(on)]
 		digits.append(digit)
 		cv2.rectangle(output, (x, y), (x + w, y + h), (0, 255, 0), 1)
 		cv2.putText(output, str(digit), (x - 10, y - 10),		cv2.FONT_HERSHEY_SIMPLEX, 0.65, (0, 255, 0), 2)
 
-	# 確認画像表示
-	# cv2_imshow(output)
-	# cv2.imwrite("res2/res.jpg",output)
-
 	# display the digits
 	# print(u"{}{}.{} \u00b0C".format(*digits))
 	res = digits[0]*10 + digits[1] + digits[2] * 0.1
 	# print(res)
-	# cv2_imshow(image)
-	# cv2_imshow(output)
 	# elapsed_time = time.time() - start
 	# print ("elapsed_time:{0}".format(elapsed_time) + "[sec]")
 	# print("End")
 
-	# !pip install pyinstaller
-
-	# pyinstaller hello.py --onefile
 	return jsonify({'b_tmp': str(res), 'status': "true"})
 
 @app.route('/hello')
