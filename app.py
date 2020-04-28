@@ -9,7 +9,7 @@ Original file is located at
 """
 # import matplotlib.pyplot as plt
 import cv2
-# import numpy as np
+import numpy as np
 from matplotlib import __version__ as mplv
 from matplotlib.ticker import MultipleLocator, FixedLocator
 from matplotlib.patches import Rectangle, Polygon
@@ -23,11 +23,15 @@ import imutils
 # import time
 #import sys
 import glob
+import base64
 
 # API
 from flask import Flask, jsonify, request, Markup
+from flask_cors import CORS
 
-app = Flask(__name__)
+#app = Flask(__name__)
+app = Flask('flask-tesseract-api')
+CORS(app)
 
 @app.route('/')
 def index():
@@ -41,10 +45,8 @@ def index():
     '''
     return Markup(html)
 
-# @app.route('/')
 @app.route('/main', methods=['GET', 'POST'])
 def main():
-
 	try:
 		if request.method == 'POST':
 			imagepath = request.form['test']
@@ -216,5 +218,36 @@ def main():
 def hello_world():
     return jsonify({'message': "Hello, world"})
 
+@app.route('/image/', methods=["POST"])
+def post():
+    """
+    画像をグレースケールに変換する
+    """
+
+    response = []
+
+    for json in request.json:
+
+        # Imageをデコード
+        img_stream = base64.b64decode(json['Image'])
+
+        # 配列に変換
+        img_array = np.asarray(bytearray(img_stream), dtype=np.uint8)
+
+        # open-cv でグレースケール
+        img_gray = cv2.imdecode(img_array, 0)
+
+        # 変換結果を保存
+        cv2.imwrite('result.png', img_before)
+
+        # 保存したファイルに対してエンコード
+        with open('result.png', "rb") as f:
+            img_base64 = base64.b64encode(f.read()).decode('utf-8')
+
+        # レスポンスのjsonに箱詰め
+        response.append({'id':json['id'], 'result' : img_base64})
+
+    return jsonify(response)
+    
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port="8000")

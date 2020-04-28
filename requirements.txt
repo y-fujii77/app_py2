@@ -4,3 +4,4 @@ imutils
 opencv-python
 matplotlib
 scipy
+flask-cors
