@@ -27,11 +27,11 @@ import base64
 
 # API
 from flask import Flask, jsonify, request, Markup
-from flask_cors import CORS
+#from flask_cors import CORS
 
-#app = Flask(__name__)
-app = Flask('flask-tesseract-api')
-CORS(app)
+app = Flask(__name__)
+#app = Flask('flask-tesseract-api')
+#CORS(app)
 
 @app.route('/')
 def index():
@@ -43,6 +43,7 @@ def index():
         <button type="submit" formmethod="post">POST</button></p>
     </form>
     '''
+    
     return Markup(html)
 
 @app.route('/main', methods=['GET', 'POST'])
@@ -52,8 +53,10 @@ def main():
 			imagepath = request.form['test']
 		else:
 			imagepath = request.args.get('test', '')
+			print(request)
 	except Exception as e:
 		imagepath = '0.jpeg'
+		
 
 	# 時間計測開始
 	# start = time.time()
@@ -213,6 +216,7 @@ def main():
 	# print("End")
 
 	return jsonify({'b_tmp': str(res), 'status': "true"})
+	#return jsonify(request)
 
 @app.route('/hello')
 def hello_world():
@@ -247,6 +251,23 @@ def post():
         response.append({'id':json['id'], 'result' : img_base64})
 	"""
     return jsonify(request)
+
+@app.route("/upload", methods=["POST"])
+def example():
+    # read request body as byte array
+    _bytes = np.frombuffer(request.data, np.uint8)
+    # decode the bytes to image directly
+    img = cv2.imdecode(_bytes, flags=cv2.IMREAD_COLOR)
+
+    return jsonify(img.shape)
     
+@app.route("/example", methods=["POST"])
+def example():
+    # read request body as byte array
+    _bytes = np.frombuffer(request.data, np.uint8)
+    # decode the bytes to image directly
+    img = cv2.imdecode(_bytes, flags=cv2.IMREAD_COLOR)
+    return jsonify(img.shape)
+  
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port="8000")
