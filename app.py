@@ -35,7 +35,7 @@ app = Flask(__name__)
 #CORS(app)
 
 bucket_name = 'new-employee-training'
-bucket_path = '0.jpeg'#'https://new-employee-training.s3-ap-northeast-1.amazonaws.com/0.jpeg'
+bucket_path = 'https://new-employee-training.s3-ap-northeast-1.amazonaws.com/0.jpeg'
 
 '''
 @app.route('/')
@@ -80,11 +80,11 @@ def main():
 	# print("第1引数：" + args[1])
 
 	# ディレクトリを指定
-	imagepath = ''
+	imagepath = '0.jpeg'
 	# s3ファイルダウンロード
 	s3 = boto3.resource('s3') #S3オブジェクトを取得
 	bucket = s3.Bucket(bucket_name)
-	bucket.download_file(bucket_path, imagepath)
+	bucket.download_file(bucket_path, '0.jpeg')
 	
 	# 画像読み込み
 	if file_exists(imagepath):
