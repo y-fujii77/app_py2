@@ -34,23 +34,14 @@ app = Flask(__name__)
 #app = Flask('flask-tesseract-api')
 #CORS(app)
 
-bucket_name = 'new-employee-training'
-bucket_path = '0.jpeg'
+# bucket_name = 'new-employee-training'
+bucket_name = 'ateam-feever-report'
+# s3://ateam-feever-report/0.jpeg
 
-'''
 @app.route('/')
-def index():
-    html = ''
-    <form action="/main">
-        <p><label>test: </label>
-        <input type="text" name="test" value="0.jpeg">
-        <button type="submit" formmethod="get">GET</button>
-        <button type="submit" formmethod="post">POST</button></p>
-    </form>
-    ''
-    
-    return Markup(html)
-'''
+def get_request():
+    contents = request.args.get('value', '')
+    return contents
 
 def file_exists(filename):
 	if filename != '':
@@ -60,6 +51,8 @@ def file_exists(filename):
 
 @app.route('/main')#, methods=['GET', 'POST'])
 def main():
+	# 引数取得
+	contents = request.args.get('value', '')
 	'''
 	try:
 		if request.method == 'POST':
@@ -80,169 +73,172 @@ def main():
 	# print("第1引数：" + args[1])
 
 	# ディレクトリを指定
-	imagepath = '0.jpeg'
+	# bucket_path = 'IMG_20200428_115112.jpg'
+	bucket_path = str(contents)
+	imagepath = 'input.jpg'
 	# s3ファイルダウンロード
+	
 	s3 = boto3.resource('s3') #S3オブジェクトを取得
 	bucket = s3.Bucket(bucket_name)
-	bucket.download_file(bucket_path, '0.jpeg')
+	bucket.download_file(bucket_path, imagepath)
 	
-	# 画像読み込み
-	if file_exists(imagepath):
-		image = cv2.imread(imagepath)
-	else:
+	# 画像読み込みできるかどうか
+	if file_exists(imagepath) == False:
 		res = 0.0
+	else:
+		image = cv2.imread(imagepath)
 
-	# 画像リサイズ
-	# height, width = image.shape[:2]
-	# size = (width//4, height//4)
-	# image = cv2.resize(image, size)
+		# 画像リサイズ
+		# height, width = image.shape[:2]
+		# size = (width//4, height//4)
+		# image = cv2.resize(image, size)
 
-	# define the dictionary of digit segments so we can identify
-	# each digit on the thermostat
-	DIGITS_LOOKUP = {
-		(1, 1, 1, 0, 1, 1, 1): 0,
-		(0, 0, 1, 0, 0, 1, 0): 1,
-		(1, 0, 1, 1, 1, 1, 0): 2,
-		(1, 0, 1, 1, 0, 1, 1): 3,
-		(0, 1, 1, 1, 0, 1, 0): 4,
-		(1, 1, 0, 1, 0, 1, 1): 5,
-		(1, 1, 0, 1, 1, 1, 1): 6,
-		(1, 0, 1, 0, 0, 1, 0): 7,
-		(1, 1, 1, 1, 1, 1, 1): 8,
-		(1, 1, 1, 1, 0, 1, 1): 9
-	}
+		# define the dictionary of digit segments so we can identify
+		# each digit on the thermostat
+		DIGITS_LOOKUP = {
+			(1, 1, 1, 0, 1, 1, 1): 0,
+			(0, 0, 1, 0, 0, 1, 0): 1,
+			(1, 0, 1, 1, 1, 1, 0): 2,
+			(1, 0, 1, 1, 0, 1, 1): 3,
+			(0, 1, 1, 1, 0, 1, 0): 4,
+			(1, 1, 0, 1, 0, 1, 1): 5,
+			(1, 1, 0, 1, 1, 1, 1): 6,
+			(1, 0, 1, 0, 0, 1, 0): 7,
+			(1, 1, 1, 1, 1, 1, 1): 8,
+			(1, 1, 1, 1, 0, 1, 1): 9
+		}
 
-	# pre-process the image by resizing it, converting it to
-	# graycale, blurring it, and computing an edge map
-	image = imutils.resize(image, height=500)
-	gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-	ret,bina = cv2.threshold(gray,170,255,cv2.THRESH_BINARY)
+		# pre-process the image by resizing it, converting it to
+		# graycale, blurring it, and computing an edge map
+		image = imutils.resize(image, height=500)
+		gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+		ret,bina = cv2.threshold(gray,170,255,cv2.THRESH_BINARY)
 
-	# 元ネタ
-	# blurred = cv2.GaussianBlur(gray, (5, 5), 0)
-	# edged = cv2.Canny(blurred, 50, 200,255)
+		# 元ネタ
+		# blurred = cv2.GaussianBlur(gray, (5, 5), 0)
+		# edged = cv2.Canny(blurred, 50, 200,255)
 
-	# 改造中
-	blurred = cv2.GaussianBlur(bina, (3, 3), 0)
-	edged = cv2.Canny(blurred, 50, 200,255)
+		# 改造中
+		blurred = cv2.GaussianBlur(bina, (3, 3), 0)
+		edged = cv2.Canny(blurred, 50, 200,255)
 
-	# ret,bina = cv2.threshold(gray,70,255,cv2.THRESH_BINARY)
-	# th2 = cv2.adaptiveThreshold(gray,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY,11,2)
-	# median = cv2.medianBlur(th2,5)
-	# blurred = cv2.GaussianBlur(th2, (5, 5), 0)
-	# edged = cv2.Canny(bina, 0, 50,255)
+		# ret,bina = cv2.threshold(gray,70,255,cv2.THRESH_BINARY)
+		# th2 = cv2.adaptiveThreshold(gray,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY,11,2)
+		# median = cv2.medianBlur(th2,5)
+		# blurred = cv2.GaussianBlur(th2, (5, 5), 0)
+		# edged = cv2.Canny(bina, 0, 50,255)
 
-	# LCD領域：ディスプレイ領域
-	# find contours in the edge map, then sort them by their
-	# size in descending order
-	cnts = cv2.findContours(edged.copy(), cv2.RETR_EXTERNAL,	cv2.CHAIN_APPROX_SIMPLE)
-	cnts = imutils.grab_contours(cnts)
-	cnts = sorted(cnts, key=cv2.contourArea, reverse=True)
-	displayCnt = None
-	# loop over the contours
-	for c in cnts:
-		# approximate the contour
-		peri = cv2.arcLength(c, True)
-		approx = cv2.approxPolyDP(c, 0.02 * peri, True)
-		# if the contour has four vertices, then we have found
-		# the thermostat display
-		if len(approx) == 4:
-			displayCnt = approx
-			break
+		# LCD領域：ディスプレイ領域
+		# find contours in the edge map, then sort them by their
+		# size in descending order
+		cnts = cv2.findContours(edged.copy(), cv2.RETR_EXTERNAL,	cv2.CHAIN_APPROX_SIMPLE)
+		cnts = imutils.grab_contours(cnts)
+		cnts = sorted(cnts, key=cv2.contourArea, reverse=True)
+		displayCnt = None
+		# loop over the contours
+		for c in cnts:
+			# approximate the contour
+			peri = cv2.arcLength(c, True)
+			approx = cv2.approxPolyDP(c, 0.02 * peri, True)
+			# if the contour has four vertices, then we have found
+			# the thermostat display
+			if len(approx) == 4:
+				displayCnt = approx
+				break
 
-	# extract the thermostat display, apply a perspective transform
-	# to it
-	warped = four_point_transform(gray, displayCnt.reshape(4, 2))
-	output = four_point_transform(image, displayCnt.reshape(4, 2))
+		# extract the thermostat display, apply a perspective transform
+		# to it
+		warped = four_point_transform(gray, displayCnt.reshape(4, 2))
+		output = four_point_transform(image, displayCnt.reshape(4, 2))
 
-	# threshold the warped image, then apply a series of morphological
-	# operations to cleanup the thresholded image
-	thresh = cv2.threshold(warped, 0, 255,cv2.THRESH_BINARY_INV | cv2.THRESH_OTSU)[1]
-	kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (1, 5))
-	thresh = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel)
+		# threshold the warped image, then apply a series of morphological
+		# operations to cleanup the thresholded image
+		thresh = cv2.threshold(warped, 0, 255,cv2.THRESH_BINARY_INV | cv2.THRESH_OTSU)[1]
+		kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (1, 5))
+		thresh = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel)
 
-	# find contours in the thresholded image, then initialize the
-	# digit contours lists
-	cnts = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+		# find contours in the thresholded image, then initialize the
+		# digit contours lists
+		cnts = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-	cnts = imutils.grab_contours(cnts)
-	digitCnts = []
-	i = 0
-	# loop over the digit area candidates
-	for c in cnts:
-		# compute the bounding box of the contour
-		(x, y, w, h) = cv2.boundingRect(c)
-		# if the contour is sufficiently large, it must be a digit
-		# '''
-		
-		if w >= 55 and (h >= 95 and h <= 120):
-			digitCnts.append(c)
-			img = cv2.rectangle(output,(x,y),(x+w,y+h),(255,255,0),2)
-			i = i + 1
-		# '''
-	# sort the contours from left-to-right, then initialize the
-	# actual digits themselves
-	digitCnts = contours.sort_contours(digitCnts,	method="left-to-right")[0]
-	digits = []
+		cnts = imutils.grab_contours(cnts)
+		digitCnts = []
+		i = 0
+		# loop over the digit area candidates
+		for c in cnts:
+			# compute the bounding box of the contour
+			(x, y, w, h) = cv2.boundingRect(c)
+			# if the contour is sufficiently large, it must be a digit
+			# '''
+			
+			if w >= 55 and (h >= 95 and h <= 120):
+				digitCnts.append(c)
+				img = cv2.rectangle(output,(x,y),(x+w,y+h),(255,255,0),2)
+				i = i + 1
+			# '''
+		# sort the contours from left-to-right, then initialize the
+		# actual digits themselves
+		digitCnts = contours.sort_contours(digitCnts,	method="left-to-right")[0]
+		digits = []
 
-	# loop over each of the digits
-	for c in digitCnts:
-		# extract the digit ROI
-		(x, y, w, h) = cv2.boundingRect(c)
-		roi = thresh[y:y + h, x:x + w]
-		# compute the width and height of each of the 7 segments
-		# we are going to examine
-		(roiH, roiW) = roi.shape
-		(dW, dH) = (int(roiW * 0.25), int(roiH * 0.15))
-		dHC = int(roiH * 0.05)
-		# define the set of 7 segments
-		segments = [
-			((0, 0), (w, dH)),	# top
-			((0, 0), (dW, h // 2)),	# top-left
-			((w - dW, 0), (w, h // 2)),	# top-right
-			((0, (h // 2) - dHC) , (w, (h // 2) + dHC)), # center
-			((0, h // 2), (dW, h)),	# bottom-left
-			((w - dW, h // 2), (w, h)),	# bottom-right
-			((0, h - dH), (w, h))	# bottom
-		]
-		on = [0] * len(segments)
-	 
-	 	# loop over the segments
-		for (i, ((xA, yA), (xB, yB))) in enumerate(segments):
-			# extract the segment ROI, count the total number of
-			# thresholded pixels in the segment, and then compute
-			# the area of the segment
-			segROI = roi[yA:yB, xA:xB]
-			total = cv2.countNonZero(segROI)
-			area = (xB - xA) * (yB - yA)
-			# if the total number of non-zero pixels is greater than
-			# 50% of the area, mark the segment as "on"
-			if total / float(area) > 0.5:
-				on[i]= 1
-		# lookup the digit and draw it on the image
-		# 要素にあるか確認
-		if tuple(on) not in DIGITS_LOOKUP:
-			digit = DIGITS_LOOKUP[(1, 1, 1, 0, 1, 1, 1)]
-		else:
-			digit = DIGITS_LOOKUP[tuple(on)]
-		digits.append(digit)
-		cv2.rectangle(output, (x, y), (x + w, y + h), (0, 255, 0), 1)
-		cv2.putText(output, str(digit), (x - 10, y - 10),		cv2.FONT_HERSHEY_SIMPLEX, 0.65, (0, 255, 0), 2)
+		# loop over each of the digits
+		for c in digitCnts:
+			# extract the digit ROI
+			(x, y, w, h) = cv2.boundingRect(c)
+			roi = thresh[y:y + h, x:x + w]
+			# compute the width and height of each of the 7 segments
+			# we are going to examine
+			(roiH, roiW) = roi.shape
+			(dW, dH) = (int(roiW * 0.25), int(roiH * 0.15))
+			dHC = int(roiH * 0.05)
+			# define the set of 7 segments
+			segments = [
+				((0, 0), (w, dH)),	# top
+				((0, 0), (dW, h // 2)),	# top-left
+				((w - dW, 0), (w, h // 2)),	# top-right
+				((0, (h // 2) - dHC) , (w, (h // 2) + dHC)), # center
+				((0, h // 2), (dW, h)),	# bottom-left
+				((w - dW, h // 2), (w, h)),	# bottom-right
+				((0, h - dH), (w, h))	# bottom
+			]
+			on = [0] * len(segments)
+		 
+		 	# loop over the segments
+			for (i, ((xA, yA), (xB, yB))) in enumerate(segments):
+				# extract the segment ROI, count the total number of
+				# thresholded pixels in the segment, and then compute
+				# the area of the segment
+				segROI = roi[yA:yB, xA:xB]
+				total = cv2.countNonZero(segROI)
+				area = (xB - xA) * (yB - yA)
+				# if the total number of non-zero pixels is greater than
+				# 50% of the area, mark the segment as "on"
+				if total / float(area) > 0.5:
+					on[i]= 1
+			# lookup the digit and draw it on the image
+			# 要素にあるか確認
+			if tuple(on) not in DIGITS_LOOKUP:
+				digit = DIGITS_LOOKUP[(1, 1, 1, 0, 1, 1, 1)]
+			else:
+				digit = DIGITS_LOOKUP[tuple(on)]
+			digits.append(digit)
+			cv2.rectangle(output, (x, y), (x + w, y + h), (0, 255, 0), 1)
+			cv2.putText(output, str(digit), (x - 10, y - 10),		cv2.FONT_HERSHEY_SIMPLEX, 0.65, (0, 255, 0), 2)
 
-	# display the digits
-	# print(u"{}{}.{} \u00b0C".format(*digits))
-	res = digits[0]*10 + digits[1] + digits[2] * 0.1
-	# print(res)
-	# elapsed_time = time.time() - start
-	# print ("elapsed_time:{0}".format(elapsed_time) + "[sec]")
-	# print("End")
+		# display the digits
+		# print(u"{}{}.{} \u00b0C".format(*digits))
+		res = digits[0]*10 + digits[1] + digits[2] * 0.1
+		# print(res)
+		# elapsed_time = time.time() - start
+		# print ("elapsed_time:{0}".format(elapsed_time) + "[sec]")
+		# print("End")
 
 	return jsonify({'b_tmp': str(res), 'status': "true"})
-	#return jsonify(request)
 
 @app.route('/hello')
 def hello_world():
     return jsonify({'message': "Hello, world"})
+
 '''
 @app.route('/image/')
 def post():
