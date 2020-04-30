@@ -178,8 +178,11 @@ def main():
 			# '''
 		# sort the contours from left-to-right, then initialize the
 		# actual digits themselves
-		digitCnts = contours.sort_contours(digitCnts,	method="left-to-right")[0]
-		digits = []
+		try:
+			digitCnts = contours.sort_contours(digitCnts,	method="left-to-right")[0]
+			digits = []
+		except ValueError:
+			pass
 
 		# loop over each of the digits
 		for c in digitCnts:
@@ -227,7 +230,10 @@ def main():
 
 		# display the digits
 		# print(u"{}{}.{} \u00b0C".format(*digits))
-		res = digits[0]*10 + digits[1] + digits[2] * 0.1
+		try:
+			res = digits[0]*10 + digits[1] + digits[2] * 0.1
+		except :
+			res = 0.0
 		# print(res)
 		# elapsed_time = time.time() - start
 		# print ("elapsed_time:{0}".format(elapsed_time) + "[sec]")
